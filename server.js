@@ -1,3 +1,6 @@
+if (!global.crypto) {
+  global.crypto = require('crypto');
+}
 require('dotenv').config();
 const app = require("./src/app")
 const connectDB = require("./src/db/db")
