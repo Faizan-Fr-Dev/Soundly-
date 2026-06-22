@@ -118,6 +118,7 @@ function App() {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [showTrackDetail, setShowTrackDetail] = useState(false);
+  const [isSeeking, setIsSeeking] = useState(false);
 
   // ─── Playlist state ──────────────────────────────────────────────────
   const [playlists, setPlaylists] = useState([]);
@@ -426,6 +427,21 @@ function App() {
   const handleSeekChange = (e) => {
     const newTime = Number(e.target.value);
     setCurrentTime(newTime);
+    if (!isSeeking) {
+      if (selectedTrack?.isYouTube) {
+        if (ytPlayerRef.current && typeof ytPlayerRef.current.seekTo === "function") {
+          ytPlayerRef.current.seekTo(newTime, true);
+        }
+      } else {
+        if (audioRef.current) {
+          audioRef.current.currentTime = newTime;
+        }
+      }
+    }
+  };
+
+  const handleSeekEnd = (e) => {
+    const newTime = Number(e.target.value);
     if (selectedTrack?.isYouTube) {
       if (ytPlayerRef.current && typeof ytPlayerRef.current.seekTo === "function") {
         ytPlayerRef.current.seekTo(newTime, true);
@@ -435,6 +451,7 @@ function App() {
         audioRef.current.currentTime = newTime;
       }
     }
+    setIsSeeking(false);
   };
 
   const handleClosePlayer = () => {
@@ -509,7 +526,7 @@ function App() {
   }, [volume, isMuted, selectedTrack]);
 
   useEffect(() => {
-    if (!selectedTrack?.isYouTube || !isPlaying) return;
+    if (!selectedTrack?.isYouTube || !isPlaying || isSeeking) return;
 
     const interval = setInterval(() => {
       const player = ytPlayerRef.current;
@@ -520,7 +537,7 @@ function App() {
     }, 500);
 
     return () => clearInterval(interval);
-  }, [selectedTrack, isPlaying]);
+  }, [selectedTrack, isPlaying, isSeeking]);
 
   useEffect(() => {
     if (selectedTrack?.isYouTube && ytPlayerRef.current) {
@@ -924,6 +941,10 @@ function App() {
               max={duration || 100}
               value={currentTime}
               onChange={handleSeekChange}
+              onMouseDown={() => setIsSeeking(true)}
+              onTouchStart={() => setIsSeeking(true)}
+              onMouseUp={handleSeekEnd}
+              onTouchEnd={handleSeekEnd}
               className="yt-native-scrubber"
             />
             <span className="yt-native-time">{formatTime(duration)}</span>
