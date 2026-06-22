@@ -2,7 +2,7 @@ const { ImageKit } = require("@imagekit/nodejs")
 const { toFile } = require("@imagekit/nodejs/core/uploads")
 
 const ImageKitClient = new ImageKit({
-    privateKey: process.env.IMAGE_KIT_KEY,
+    privateKey: process.env.IMAGE_KIT_KEY || "dummy_key_to_prevent_startup_crash",
 })
 
 /**
