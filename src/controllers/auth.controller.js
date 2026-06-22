@@ -45,14 +45,17 @@ async function registerUser(req, res) {
       username: user.username,
       email: user.email,
       role: user.role,
+      profileImage: user.profileImage || "",
     },
   });
 }
 async function loginUser(req, res) {
   const { username, email, password } = req.body;
 
+  const loginIdentifier = username || email;
+
   const user = await userModel.findOne({
-    $or: [{ username }, { email }],
+    $or: [{ username: loginIdentifier }, { email: loginIdentifier }],
   });
 
   if (!user) {
@@ -85,6 +88,7 @@ async function loginUser(req, res) {
       username: user.username,
       email: user.email,
       role: user.role,
+      profileImage: user.profileImage || "",
     },
   });
 }
@@ -95,4 +99,38 @@ async function logoutUser(req,res){
   res.status(200).json({message:"Logged out successfully!!!"})
 }
 
-module.exports = { registerUser, loginUser, logoutUser };
+// ─── Profile picture update ────────────────────────────────────────────
+async function updateProfilePicture(req, res) {
+  try {
+    const { profileImage } = req.body;
+    if (!profileImage) {
+      return res.status(400).json({ message: "profileImage URL is required" });
+    }
+
+    const user = await userModel.findByIdAndUpdate(
+      req.user.id,
+      { profileImage },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({
+      message: "Profile picture updated!",
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        profileImage: user.profileImage || "",
+      },
+    });
+  } catch (error) {
+    console.error("Profile picture error:", error);
+    return res.status(500).json({ message: error.message || "Failed to update profile picture" });
+  }
+}
+
+module.exports = { registerUser, loginUser, logoutUser, updateProfilePicture };

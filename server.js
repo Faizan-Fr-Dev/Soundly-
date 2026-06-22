@@ -6,7 +6,7 @@ const dns = require("dns");
 
 
 // Change DNS
-dns.setServers(["1.1.1.1", "8.8.8.8"]);
+// dns.setServers(["1.1.1.1", "8.8.8.8"]);
 
 connectDB();
 

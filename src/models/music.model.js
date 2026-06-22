@@ -5,6 +5,9 @@ uri:{
     type:String,
     required:true
 },
+coverImage:{
+    type:String,
+},
 title:{
 type:String,
     required:true

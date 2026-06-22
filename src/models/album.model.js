@@ -5,9 +5,12 @@ title:{
 type:String,
     required:true
 },
+coverImage:{
+    type:String,
+},
 musics:[{
     type:mongoose.Schema.Types.ObjectId,
-    ref:"musics",
+    ref:"music",
 }],
 
 artist:{
