@@ -125,6 +125,8 @@ function App() {
   const [selectedPlaylist, setSelectedPlaylist] = useState(null);
   const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
   const [addToPlaylistTrack, setAddToPlaylistTrack] = useState(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showGuestPlayConfirm, setShowGuestPlayConfirm] = useState(false);
 
   // ─── Settings state ──────────────────────────────────────────────────
   const [showSettings, setShowSettings] = useState(false);
@@ -195,27 +197,29 @@ function App() {
   }
 
   async function loadTracks() {
-    if (!currentUser) { setTracks([]); return; }
     setLoading((v) => ({ ...v, tracks: true }));
     try {
       const data = await api("/api/music");
       setTracks(data.musics || []);
     } catch (error) {
-      showNotice(!navigator.onLine ? "You're offline — can't load tracks" : error.message);
+      if (error.message !== "Unauthorized Request" && error.message !== "Unauthorized Request (No Token)") {
+        showNotice(!navigator.onLine ? "You're offline — can't load tracks" : error.message);
+      }
     } finally {
       setLoading((v) => ({ ...v, tracks: false }));
     }
   }
 
   async function loadAlbums() {
-    if (!currentUser) { setAlbums([]); return; }
     setLoading((v) => ({ ...v, albums: true }));
     try {
       const data = await api("/api/music/albums");
       setAlbums(data.albums || []);
       setSelectedAlbum(null);
     } catch (error) {
-      showNotice(!navigator.onLine ? "You're offline — can't load albums" : error.message);
+      if (error.message !== "Unauthorized Request" && error.message !== "Unauthorized Request (No Token)") {
+        showNotice(!navigator.onLine ? "You're offline — can't load albums" : error.message);
+      }
     } finally {
       setLoading((v) => ({ ...v, albums: false }));
     }
@@ -332,7 +336,12 @@ function App() {
     finally { setLoading((v) => ({ ...v, auth: false })); }
   }
 
-  async function handleLogout() {
+  function handleLogout() {
+    setShowLogoutConfirm(true);
+  }
+
+  async function confirmLogout() {
+    setShowLogoutConfirm(false);
     try { await api("/api/auth/logout", { method: "POST" }); } catch {}
     localStorage.removeItem("soundly-user");
     setCurrentUser(null);
@@ -369,6 +378,10 @@ function App() {
   }
 
   function playTrack(track) {
+    if (!currentUser) {
+      setShowGuestPlayConfirm(true);
+      return;
+    }
     setCurrentTime(0);
     setDuration(0);
 
@@ -395,6 +408,10 @@ function App() {
   }
 
   function togglePlayForTrack(track) {
+    if (!currentUser) {
+      setShowGuestPlayConfirm(true);
+      return;
+    }
     const isSame = selectedTrack && (selectedTrack._id || selectedTrack.id) === (track._id || track.id);
     if (!isSame) {
       playTrack(track);
@@ -1004,6 +1021,38 @@ function App() {
 
       {showCreatePlaylist && <CreatePlaylistModal onClose={() => setShowCreatePlaylist(false)} onCreate={handleCreatePlaylist} />}
       {addToPlaylistTrack && <AddToPlaylistModal track={addToPlaylistTrack} playlists={playlists} onClose={() => setAddToPlaylistTrack(null)} onAdd={handleAddToPlaylist} onCreateNew={() => { setAddToPlaylistTrack(null); setShowCreatePlaylist(true); }} />}
+
+      {showLogoutConfirm && (
+        <div className="modal-backdrop" role="presentation" onClick={() => setShowLogoutConfirm(false)}>
+          <section className="auth-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <button className="icon-button modal-close" onClick={() => setShowLogoutConfirm(false)} aria-label="Close" type="button"><X size={18} /></button>
+            <div className="auth-header"><LogOut size={32} style={{ color: "var(--accent)" }} /><div><p className="eyebrow">Confirm Action</p><h2>Logging out</h2></div></div>
+            <form className="auth-form" onSubmit={(e) => { e.preventDefault(); confirmLogout(); }}>
+              <p style={{ color: "var(--text-secondary)", margin: "0 0 10px" }}>Are you sure you want to log out of your account?</p>
+              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+                <button className="ghost-button" onClick={() => setShowLogoutConfirm(false)} type="button">Cancel</button>
+                <button className="primary-button" type="submit" style={{ backgroundColor: "#ef4444", color: "#fff" }}>Log out</button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
+
+      {showGuestPlayConfirm && (
+        <div className="modal-backdrop" role="presentation" onClick={() => setShowGuestPlayConfirm(false)}>
+          <section className="auth-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <button className="icon-button modal-close" onClick={() => setShowGuestPlayConfirm(false)} aria-label="Close" type="button"><X size={18} /></button>
+            <div className="auth-header"><Music2 size={32} style={{ color: "var(--accent)" }} /><div><p className="eyebrow">Access Limited</p><h2>Sign in to listen</h2></div></div>
+            <form className="auth-form" onSubmit={(e) => { e.preventDefault(); setShowGuestPlayConfirm(false); setAuthOpen(true); }}>
+              <p style={{ color: "var(--text-secondary)", margin: "0 0 10px" }}>Create an account or sign in to stream tracks, build playlists, and experience Soundly.</p>
+              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+                <button className="ghost-button" onClick={() => setShowGuestPlayConfirm(false)} type="button">Cancel</button>
+                <button className="primary-button" type="submit">Sign In</button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
     </>
   );
 }
@@ -1159,9 +1208,7 @@ function MusicView({ isListener, loading, tracks, onRefresh, onTogglePlay, onOpe
           </button>
         )}
       </div>
-      {!isListener ? (
-        <EmptyState icon={Music2} title="Listener access required" text="The backend protects streaming routes for users with the listener role." action="Sign in as listener" onAction={onOpenAuth} />
-      ) : tracks.length ? (
+      {tracks.length ? (
         <div className="track-grid">
           {tracks.map((track, index) => (
             <TrackCard key={track._id || track.id} track={track} index={index} onTogglePlay={onTogglePlay} selectedTrack={selectedTrack} isPlaying={isPlaying} onOpenDetail={onOpenDetail} canDelete={isArtist && (track.artist?._id === currentUser?.id || track.artist === currentUser?.id)} onDelete={onDelete} onAddToPlaylist={onAddToPlaylist} showPlaylistBtn={!!currentUser} />
@@ -1237,9 +1284,7 @@ function LibraryView({ isListener, loading, tracks, albums, selectedAlbum, onRef
         </button>
       </div>
 
-      {!isListener ? (
-        <EmptyState icon={Library} title="Library access required" text="Sign in with a listener account to browse your library." action="Sign in as listener" onAction={onOpenAuth} />
-      ) : libraryTab === "tracks" ? (
+      {libraryTab === "tracks" ? (
         /* ── Tracks Tab ── */
         <>
           <div className="section-heading library-sub-heading">
@@ -1322,9 +1367,7 @@ function HomeAlbumsSection({ isListener, loading, albums, onSelectAlbum, onRefre
   return (
     <section className="view">
       <div className="section-heading"><div><p className="eyebrow">Collection</p><h2>Albums</h2></div><button className="icon-button" onClick={onRefresh} title="Refresh albums" type="button">{loading ? <Loader2 className="spin" size={18} /> : <RefreshCw size={18} />}</button></div>
-      {!isListener ? (
-        <EmptyState icon={Album} title="Library access required" text="Sign in to browse albums." action="Sign in" onAction={onOpenAuth} />
-      ) : albums.length ? (
+      {albums.length ? (
         <div className="album-grid">
           {albums.map((album, index) => {
             const canDelete = isArtist && (album.artist?._id === currentUser?.id || album.artist === currentUser?.id);
@@ -1417,7 +1460,7 @@ function ProfilePictureChip({ currentUser, onUpdateProfilePicture, showNotice })
       ) : (
         <UserRound size={16} />
       )}
-      {currentUser.username}
+      {currentUser.username.length > 14 ? `${currentUser.username.slice(0, 12)}...` : currentUser.username}
       <small>{currentUser.role}</small>
       <input ref={fileRef} type="file" accept="image/*" onChange={handleFileChange} style={{ display: "none" }} />
     </span>

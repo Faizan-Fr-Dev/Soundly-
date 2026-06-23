@@ -34,9 +34,9 @@ router.post(
     musicController.createAlbum
 )
 
-router.get("/", authMiddleware.authUser, musicController.getAllMusics )
-router.get("/albums", authMiddleware.authUser, musicController.getAlbums )
-router.get("/albums/:albumId", authMiddleware.authUser, musicController.getAlbumById )
+router.get("/", musicController.getAllMusics )
+router.get("/albums", musicController.getAlbums )
+router.get("/albums/:albumId", musicController.getAlbumById )
 
 // ─── Delete routes (artist-only) ───────────────────────────────────────
 router.delete("/:trackId", authMiddleware.authArtist, musicController.deleteMusic)
