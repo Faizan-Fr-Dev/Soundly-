@@ -1460,7 +1460,7 @@ function ProfilePictureChip({ currentUser, onUpdateProfilePicture, showNotice })
       ) : (
         <UserRound size={16} />
       )}
-      {currentUser.username.length > 14 ? `${currentUser.username.slice(0, 12)}...` : currentUser.username}
+      <span title={currentUser.username}>{currentUser.username.length > 14 ? `${currentUser.username.slice(0, 12)}...` : currentUser.username}</span>
       <small>{currentUser.role}</small>
       <input ref={fileRef} type="file" accept="image/*" onChange={handleFileChange} style={{ display: "none" }} />
     </span>
