@@ -834,6 +834,7 @@ function App() {
                     onOpenAuth={() => setAuthOpen(true)}
                     onAddToPlaylist={setAddToPlaylistTrack}
                     currentUser={currentUser}
+                    isSearching={true}
                   />
                   {hasYoutubeTracks && (
                     <YouTubeResultsSection
@@ -862,7 +863,7 @@ function App() {
           {activeView === "home" && !searchActive && (
             <>
               <div ref={tracksRef}>
-                <MusicView isListener={isListener} loading={loading.tracks} tracks={filteredTracks} onRefresh={loadTracks} onTogglePlay={togglePlayForTrack} selectedTrack={selectedTrack} isPlaying={isPlaying} onOpenDetail={openTrackDetail} onOpenAuth={() => setAuthOpen(true)} currentUser={currentUser} onDelete={handleDeleteTrack} onAddToPlaylist={setAddToPlaylistTrack} />
+                <MusicView isListener={isListener} loading={loading.tracks} tracks={filteredTracks} onRefresh={loadTracks} onTogglePlay={togglePlayForTrack} selectedTrack={selectedTrack} isPlaying={isPlaying} onOpenDetail={openTrackDetail} onOpenAuth={() => setAuthOpen(true)} currentUser={currentUser} onDelete={handleDeleteTrack} onAddToPlaylist={setAddToPlaylistTrack} isSearching={!!query.trim()} />
               </div>
               <HomeAlbumsSection isListener={isListener} loading={loading.albums} albums={albums} onSelectAlbum={(album) => { setActiveView("library"); openAlbum(album); }} onRefresh={loadAlbums} onOpenAuth={() => setAuthOpen(true)} currentUser={currentUser} onDelete={handleDeleteAlbum} />
             </>
@@ -890,6 +891,7 @@ function App() {
               onAddToPlaylist={setAddToPlaylistTrack}
               libraryTab={libraryTab}
               setLibraryTab={setLibraryTab}
+              query={query}
             />
           )}
 
@@ -1145,15 +1147,17 @@ function Sidebar({ activeView, setActiveView, isArtist, isSignedIn }) {
   );
 }
 
-function MusicView({ isListener, loading, tracks, onRefresh, onTogglePlay, onOpenAuth, selectedTrack, isPlaying, onOpenDetail, currentUser, onDelete, onAddToPlaylist }) {
+function MusicView({ isListener, loading, tracks, onRefresh, onTogglePlay, onOpenAuth, selectedTrack, isPlaying, onOpenDetail, currentUser, onDelete, onAddToPlaylist, isSearching }) {
   const isArtist = currentUser?.role === "artist";
   return (
     <section className="view">
       <div className="section-heading">
-        <div><p className="eyebrow">Recently added</p><h2>Tracks</h2></div>
-        <button className="icon-button" onClick={onRefresh} title="Refresh music" type="button">
-          {loading ? <Loader2 className="spin" size={18} /> : <RefreshCw size={18} />}
-        </button>
+        <div><p className="eyebrow">{isSearching ? "Search" : "Recently added"}</p><h2>{isSearching ? "Search Results" : "Tracks"}</h2></div>
+        {!isSearching && (
+          <button className="icon-button" onClick={onRefresh} title="Refresh music" type="button">
+            {loading ? <Loader2 className="spin" size={18} /> : <RefreshCw size={18} />}
+          </button>
+        )}
       </div>
       {!isListener ? (
         <EmptyState icon={Music2} title="Listener access required" text="The backend protects streaming routes for users with the listener role." action="Sign in as listener" onAction={onOpenAuth} />
@@ -1164,7 +1168,11 @@ function MusicView({ isListener, loading, tracks, onRefresh, onTogglePlay, onOpe
           ))}
         </div>
       ) : (
-        <EmptyState icon={Disc3} title={loading ? "Loading tracks" : "No tracks yet"} text={loading ? "Fetching the latest uploads." : "Upload music as an artist, then return as a listener to stream it."} />
+        <EmptyState
+          icon={Disc3}
+          title={loading ? "Searching..." : isSearching ? "No matches found" : "No tracks yet"}
+          text={loading ? "Fetching the latest uploads." : isSearching ? "We couldn't find any uploaded tracks matching your search." : "Upload music as an artist, then return as a listener to stream it."}
+        />
       )}
     </section>
   );
@@ -1192,7 +1200,7 @@ function TrackCard({ track, index, onTogglePlay, selectedTrack, isPlaying, onOpe
 }
 
 // ─── Library View with Tracks / Albums tabs ───────────────────────────
-function LibraryView({ isListener, loading, tracks, albums, selectedAlbum, onRefreshTracks, onRefreshAlbums, onSelectAlbum, onBack, onPlay, onOpenAuth, currentUser, onDeleteTrack, onDeleteAlbum, selectedTrack, isPlaying, onOpenDetail, onAddToPlaylist, libraryTab, setLibraryTab }) {
+function LibraryView({ isListener, loading, tracks, albums, selectedAlbum, onRefreshTracks, onRefreshAlbums, onSelectAlbum, onBack, onPlay, onOpenAuth, currentUser, onDeleteTrack, onDeleteAlbum, selectedTrack, isPlaying, onOpenDetail, onAddToPlaylist, libraryTab, setLibraryTab, query = "" }) {
   const isArtist = currentUser?.role === "artist";
   const albumTracks = selectedAlbum?.musics || [];
 
@@ -1207,7 +1215,7 @@ function LibraryView({ isListener, loading, tracks, albums, selectedAlbum, onRef
         {loading.album ? (
           <EmptyState icon={Loader2} title="Opening album" text="Fetching the songs in this album." />
         ) : (
-          <AlbumDetail album={selectedAlbum} tracks={albumTracks} onPlay={onPlay} />
+          <AlbumDetail album={selectedAlbum} tracks={albumTracks} onPlay={onPlay} selectedTrack={selectedTrack} isPlaying={isPlaying} />
         )}
       </section>
     );
@@ -1245,7 +1253,7 @@ function LibraryView({ isListener, loading, tracks, albums, selectedAlbum, onRef
               ))}
             </div>
           ) : (
-            <EmptyState icon={Disc3} title={loading.tracks ? "Loading tracks" : "No tracks yet"} text={loading.tracks ? "Fetching the latest uploads." : "Upload music as an artist, then return as a listener to stream it."} />
+            <EmptyState icon={Disc3} title={loading.tracks ? "Loading tracks" : query.trim() ? "No matches found" : "No tracks yet"} text={loading.tracks ? "Fetching the latest uploads." : query.trim() ? `We couldn't find any tracks in your library matching "${query}".` : "Upload music as an artist, then return as a listener to stream it."} />
           )}
         </>
       ) : (
@@ -1278,7 +1286,7 @@ function LibraryView({ isListener, loading, tracks, albums, selectedAlbum, onRef
   );
 }
 
-function AlbumDetail({ album, tracks, onPlay }) {
+function AlbumDetail({ album, tracks, onPlay, selectedTrack, isPlaying }) {
   return (
     <div className="album-detail">
       <div className="album-hero">
@@ -1287,13 +1295,16 @@ function AlbumDetail({ album, tracks, onPlay }) {
       </div>
       {tracks.length ? (
         <div className="song-list">
-          {tracks.map((track, index) => (
-            <button className="song-row" key={track._id || track.id} onClick={() => onPlay(track)} type="button">
-              <span className="song-index">{index + 1}</span>
-              <span className="song-main"><strong>{track.title}</strong><small>{track.artist?.username || album.artist?.username || "Unknown artist"}</small></span>
-              <Play size={18} fill="currentColor" />
-            </button>
-          ))}
+          {tracks.map((track, index) => {
+            const isActive = selectedTrack && (selectedTrack._id || selectedTrack.id) === (track._id || track.id);
+            return (
+              <button className={`song-row ${isActive ? "active" : ""}`} key={track._id || track.id} onClick={() => onPlay(track)} type="button">
+                <span className="song-index">{index + 1}</span>
+                <span className="song-main"><strong>{track.title}</strong><small>{track.artist?.username || album.artist?.username || "Unknown artist"}</small></span>
+                {isActive && isPlaying ? <Pause size={18} /> : <Play size={18} fill="currentColor" />}
+              </button>
+            );
+          })}
         </div>
       ) : (
         <EmptyState icon={Music2} title="No songs in this album" text="Add song names when creating an album and they will appear here." />
@@ -1629,7 +1640,7 @@ function PlaylistDetail({ playlist, onPlay, onRemoveSong, selectedTrack, isPlayi
             const isActive = selectedTrack && (selectedTrack._id || selectedTrack.id) === (track._id || track.id);
             return (
               <div className="song-row-wrapper" key={track._id || track.id}>
-                <button className="song-row" onClick={() => onPlay(track)} type="button">
+                <button className={`song-row ${isActive ? "active" : ""}`} onClick={() => onPlay(track)} type="button">
                   <span className="song-index">{index + 1}</span>
                   <span className="song-main"><strong>{track.title}</strong><small>{track.artist?.username || "Unknown artist"}</small></span>
                   {isActive && isPlaying ? <Pause size={18} /> : <Play size={18} fill="currentColor" />}

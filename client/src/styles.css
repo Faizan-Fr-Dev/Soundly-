@@ -150,6 +150,30 @@
 
 * { box-sizing: border-box; }
 
+/* Custom Global Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.15);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bg-card-border);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Unified Focus Ring */
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--accent-glow) !important;
+  background: var(--bg-card-hover) !important;
+}
+
+
 body {
   min-width: 320px;
   min-height: 100vh;
@@ -198,7 +222,7 @@ button { cursor: pointer; }
 
 .sidebar:hover {
   width: 280px;
-  padding: 22px;
+  padding: 22px 12px;
 }
 
 .nav-label {
@@ -264,6 +288,21 @@ button { cursor: pointer; }
   font-size: 1.35rem;
   font-weight: 800;
   text-decoration: none;
+  transition: gap 0.3s ease;
+}
+
+@media (min-width: 1041px) {
+  .brand {
+    justify-content: center;
+    width: 100%;
+    padding: 0;
+    gap: 0;
+  }
+  .sidebar:hover .brand {
+    justify-content: flex-start;
+    padding: 0 14px;
+    gap: 12px;
+  }
 }
 
 .brand-mark {
@@ -318,6 +357,32 @@ img.brand-mark { background: transparent; object-fit: contain; }
   background: var(--bg-card-hover);
   color: var(--text-primary);
 }
+
+.nav-item {
+  position: relative;
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 4px;
+  background: var(--accent);
+  border-radius: 0 4px 4px 0;
+  transition: all 0.2s ease;
+}
+
+.nav-item svg {
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.nav-item:hover svg {
+  transform: scale(1.05);
+  color: var(--accent);
+}
+
 
 /* ─── Heading Resets ────────────────────────────────────────────────── */
 .mini-panel h2, .section-heading h2, .auth-header h2, .empty-state h3, .track-card h3, .album-card h3 { margin: 0; }
@@ -474,7 +539,23 @@ img.brand-mark { background: transparent; object-fit: contain; }
 }
 
 /* ─── Notice ────────────────────────────────────────────────────────── */
-.notice { margin: 18px 0 0; padding: 13px 16px; border: 1px solid var(--notice-border); border-radius: 8px; background: var(--notice-bg); color: var(--notice-text); font-weight: 700; }
+.notice {
+  position: fixed;
+  bottom: 110px;
+  right: 24px;
+  z-index: 999;
+  margin: 0;
+  padding: 14px 20px;
+  border: 1px solid var(--notice-border);
+  border-radius: 12px;
+  background: var(--notice-bg);
+  color: var(--notice-text);
+  font-weight: 700;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  max-width: 320px;
+}
 
 /* ─── Feature 3: Network Banner ─────────────────────────────────────── */
 .network-banner {
@@ -535,6 +616,14 @@ img.brand-mark { background: transparent; object-fit: contain; }
 .song-list { display: grid; gap: 8px; }
 .song-row { display: grid; grid-template-columns: 34px minmax(0, 1fr) 42px; gap: 12px; align-items: center; width: 100%; min-height: 64px; border: 1px solid var(--bg-card-border); border-radius: 8px; background: var(--ghost-bg); color: var(--text-primary); padding: 10px 12px; text-align: left; transition: transform 0.18s ease, background 0.18s ease; }
 .song-row:hover { background: var(--bg-card-hover); }
+.song-row.active {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+  color: var(--accent);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+.song-row.active .song-index { color: var(--accent); }
+.song-row.active .song-main small { color: var(--accent); opacity: 0.85; }
 .song-index { color: var(--text-secondary); font-weight: 800; text-align: center; }
 .song-main { min-width: 0; }
 .song-main strong, .song-main small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -590,6 +679,7 @@ select option { background: var(--option-bg); }
   position: fixed; right: 18px; bottom: 18px; left: 18px; z-index: 10;
   justify-content: space-between; gap: 18px; min-height: 78px; padding: 12px 20px;
   border-radius: 8px;
+  transition: background 0.18s ease, border-color 0.18s ease;
 }
 .player-track { min-width: 200px; max-width: 25%; gap: 12px; }
 .player-track-info { min-width: 0; flex: 1; }
@@ -971,7 +1061,8 @@ audio { width: min(800px, 70vw); accent-color: var(--accent); }
   /* Make action buttons always visible on touch devices */
   .playlist-add-btn,
   .track-card .delete-button,
-  .album-card-wrapper .delete-button { opacity: 1; }
+  .album-card-wrapper .delete-button,
+  .song-remove-btn { opacity: 1; }
 
   /* Show hamburger, hide nav by default */
   .hamburger-btn { display: grid; }
@@ -1020,6 +1111,7 @@ audio { width: min(800px, 70vw); accent-color: var(--accent); }
     min-width: 0;
     max-width: 100% !important;
     justify-content: flex-start;
+    padding-right: 36px;
   }
   .player-close-btn {
     position: absolute !important;
@@ -1056,7 +1148,7 @@ audio { width: min(800px, 70vw); accent-color: var(--accent); }
     grid-row: 1 !important;
     grid-column: 3 / span 2 !important;
     width: 100% !important;
-    height: 32px !important;
+    height: 44px !important;
     align-self: center !important;
   }
   .yt-native-time:nth-of-type(1) {
@@ -1069,7 +1161,7 @@ audio { width: min(800px, 70vw); accent-color: var(--accent); }
     grid-row: 2 !important;
     grid-column: 2 / span 2 !important;
     width: 100% !important;
-    height: 32px !important;
+    height: 44px !important;
     align-self: center !important;
   }
   .yt-native-time:nth-of-type(2) {
@@ -1111,11 +1203,25 @@ audio { width: min(800px, 70vw); accent-color: var(--accent); }
   .search, .account > button, .user-chip { width: 100%; max-width: none; }
   .hero-band { padding: 22px; }
   .hero-actions, .studio-layout { display: grid; grid-template-columns: 1fr; }
-  .album-hero { grid-template-columns: 1fr; }
-  .album-hero .cover-art, .playlist-cover-art.large-icon { max-width: 220px; }
+  .album-hero {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+    padding: 24px 16px;
+  }
+  .album-hero .cover-art, .playlist-cover-art.large-icon {
+    margin: 0 auto 12px;
+  }
   .player strong, .player span { width: 100%; max-width: none; }
   .pfp-section { flex-direction: column; text-align: center; }
   .theme-grid { grid-template-columns: 1fr 1fr; }
   .library-tabs { width: 100%; }
   .library-tab { flex: 1; justify-content: center; }
+  .notice {
+    left: 20px;
+    right: 20px;
+    bottom: 140px;
+    max-width: none;
+    animation: slideUpToast 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
 }
