@@ -1,106 +1,97 @@
-# Soundly — Premium Music Streaming Web Application
+# Soundly — Premium Music Streaming & Creator Platform
 
-Soundly is a modern, responsive, and feature-rich full-stack music streaming application. Styled with a premium glassmorphic dark-mode aesthetic inspired by Spotify, Soundly supports dynamic themes, dynamic tab favicon updates, role-based workspaces, secure direct media uploads, custom playback controls for both local and YouTube tracks, and public guest browsing.
+A modern, full-stack web application for a music streaming platform and creator workspace. The application features a dynamic tracks catalog, customized playlists, a dynamic theme engine with matching favicons, public guest browsing guards, and a dedicated artist studio dashboard.
 
 ---
 
-## 🚀 Live Demo
-Experience the production release of the application here:
-👉 **[Soundly Web App](https://soundly-production-7322.up.railway.app/)**
+## 🚀 Live Demo & Deployments
+* **Web App (Frontend & Backend)**: Deployed on Railway at **[Soundly Web App](https://soundly-production-7322.up.railway.app/)**
 
 ---
 
 ## ✨ Features
 
-### 1. 🎨 Dynamic Theme Engine & Favicons
-* **Theme Presets**: Switch instantly between multiple color schemes in Settings: **Dark** (Emerald), **Midnight** (Purple/Indigo), **Sunset** (Orange/Red), **Ocean** (Cyan/Teal), and **Light** (Clean/Modern).
-* **Syncing Logo Favicons**: Changing themes dynamically updates the browser tab's favicon using SVG data URIs, keeping the vinyl disc brand color synchronized with your selected theme.
-* **Spin Animation**: The retro vinyl disc logo spins smoothly upon hover.
+### 🎧 Music Streaming
+* **Tracks Catalog**: Browse uploaded tracks and albums with custom cover art and descriptions.
+* **YouTube Search & Stream**: Integrated YouTube IFrame API to search and stream tracks in audio-only mode with native-like UI controls (timeline scrubber, volume, and mute).
+* **Dynamic Playlists**: Create, rename, delete, and add/remove songs to custom Playlists.
 
-### 2. 👥 Guest Browsing & Playback Guards
-* **Public Library Access**: Non-logged-in guest users can fully browse tracks, list albums, query search results, and inspect album details.
-* **Themed Playback Guards**: Clicking "Play" on a track card, album row, or within the detail views as a guest blocks playback and triggers a custom-styled *"Sign in to listen"* modal (complete with Cancel / Sign In buttons), bypassing the native browser popups and bottom alert notices.
+### 🎨 Dynamic Customization
+* **Real-time Themes**: Switch between Dark (Emerald), Midnight (Purple), Sunset (Orange), Ocean (Cyan), and Light themes instantly.
+* **Favicon Synchronization**: Changing themes dynamically updates the browser tab's favicon using SVG data URIs, matching the retro vinyl logo colors.
+* **Text Truncation & Tooltips**: Truncates usernames, track titles, and artist tags with hover tooltips for long names to maintain visual clean layouts.
+* **Active Highlighting**: Currently playing tracks are highlighted with matching border colors and background glows inside all album and playlist views.
 
-### 3. 🎵 Hybrid Audio Playback System
-* **Uploaded Files**: Plays high-quality audio files directly from ImageKit CDN using standard HTML5 `<audio>` streams.
-* **YouTube Playback Integration**: Integrates the official Google YouTube IFrame API to stream video tracks in an audio-only mode.
-* **Native Control UI**: Offers custom playback sliders, current time trackers, seek scrubbers, durations, mute toggles, and volume control inputs, styled to match native browser players.
-* **Spacebar Hotkey**: Tap the Spacebar key anywhere on the app to play/pause the active track (with input checks to prevent hotkey triggers while typing in search bars or authentication fields).
+### 👥 Guest Access & Modals
+* **Public Browse Access**: Unprotected library browsing allows guest users to check albums and songs without logging in.
+* **Custom Playback Guard**: Intercepts guest play triggers, shows a custom warning modal advising login, and completely bypasses standard browser alerts and bottom toast notices.
+* **Custom Confirmations**: Replaced native browser confirmation alerts with custom themed modals for logout, deleting albums, and playlist removals.
 
-### 4. 🗂️ Role-Based Workspaces & Libraries
-* **Artist Studio Mode**: Sign up as an Artist to access the publishing dashboard. Upload audio, attach custom cover art, preview images locally before uploading, and package collections of songs into full Albums.
-* **Listener Space**: Create, rename, delete, and add/remove songs to custom Playlists.
-* **Ellipsis Text Truncation**: Truncates long track names, artist names, and topbar usernames (max 14 characters) with custom browser hover tooltips showing full untruncated values.
-* **Active Highlights**: Currently playing tracks are highlighted with green borders, background glows, and color indicators in all album and playlist views.
-
-### 5. 🔒 Security & Server Optimizations
-* **Secure Direct CDN Uploads**: Backend issues transient signatures/tokens for the ImageKit API. Frontend uploads files directly to the ImageKit CDN, saving server bandwidth.
-* **Cookie-Based Sessions**: Secure cookie-parser JWT storage protects private listener and artist API endpoints.
-* **Caching Control (MIME fix)**: Configured Express static asset handlers to set `Cache-Control: no-store` on HTML files, preventing browser caching of outdated `index.html` referencing deleted hashes, while maximizing caching for built JS/CSS.
-* **Custom Confirmations**: Replaced native browser confirm popups with responsive, custom-styled confirmation modals (e.g., logging out, deleting tracks, playlist removals).
+### 🛡️ Artist Studio Dashboard
+* **Direct CDN Uploads**: Upload tracks and cover art directly to ImageKit CDN using backend transient JWT signatures, saving server bandwidth.
+* **Image Previews**: Local image loading previews for album cover art files before uploading.
+* **CRUD Operations**: Artists can fully upload tracks, delete uploads, create albums, or remove album lists.
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Technology Stack
 
-### Frontend Client
-* **Framework**: React.js (Vite)
-* **Icons**: Lucide React
-* **Styling**: Vanilla CSS Custom Properties (Variables)
-* **SDKs**: ImageKit JavaScript SDK, YouTube IFrame Player API
-
-### Backend Server
-* **Environment**: Node.js, Express
-* **Database**: MongoDB (Mongoose Object Modeling)
-* **Authentication**: JSON Web Token (JWT), bcryptjs
-* **Middleware**: Cookie-Parser, Multer, Dotenv
-
----
-
-## 📦 Database Schema Design
-
-Soundly models resources using Mongoose schemas:
-
-### 1. User Schema (`src/models/user.model.js`)
-* `username`: String (Unique, Required)
-* `email`: String (Unique, Required)
-* `password`: String (Hashed, Required)
-* `role`: String (Enum: `['user', 'artist']`, Default: `'user'`)
-* `profileImage`: String (ImageURL)
-
-### 2. Music Schema (`src/models/music.model.js`)
-* `title`: String (Required)
-* `uri`: String (Audio CDN URL)
-* `coverImage`: String (Cover Art URL)
-* `artist`: ObjectID (Ref: `User`)
-* `isYouTube`: Boolean (Default: `false`)
-* `youtubeId`: String (Optional)
-
-### 3. Album Schema (`src/models/album.model.js`)
-* `title`: String (Required)
-* `coverImage`: String (Cover Art URL)
-* `artist`: ObjectID (Ref: `User`)
-* `musics`: Array of ObjectIDs (Ref: `Music`)
-
-### 4. Playlist Schema (`src/models/playlist.model.js`)
-* `title`: String (Required)
-* `user`: ObjectID (Ref: `User`)
-* `musics`: Array of ObjectIDs (Ref: `Music`)
+| Component | Technology | Description |
+| --- | --- | --- |
+| **Frontend** | React (v19) | Modern component-based User Interface |
+| | Vite (v6) | Ultra-fast next-generation frontend developer build environment |
+| | Lucide React | Clean, scalable vector icons |
+| | CSS Custom Properties | Custom styled theme variables for real-time CSS swapping |
+| | ImageKit JavaScript SDK | Direct client-side media uploads |
+| | YouTube IFrame Player API | Native-like YouTube video audio-only streaming control |
+| **Backend** | Node.js & Express | Lightweight RESTful API server |
+| | Cookie-Parser & JWT | Secure token-based session auth and protected routes |
+| **Database** | MongoDB & Mongoose | Object modeling and database storage |
 
 ---
 
-## 🔧 Installation & Setup
+## 📂 Project Structure
 
-Follow these steps to run Soundly locally:
+```
+Soundly-/
+├── client/
+│   ├── dist/             # Compiled production bundle assets (HTML, CSS, JS)
+│   ├── public/           # Static public resources
+│   ├── src/
+│   │   ├── main.jsx      # Client logic, React components, state, views, and entry
+│   │   └── styles.css    # Premium CSS classes, custom themes, and media queries
+│   ├── package.json      # Client dependencies and dev scripts
+│   └── vite.config.js    # Vite configuration
+├── src/
+│   ├── controllers/      # Backend controller handlers (music, auth)
+│   ├── db/               # MongoDB connection handler
+│   ├── middlewares/      # Express JWT auth middlewares
+│   ├── models/           # Mongoose schemas (User, Music, Album, Playlist)
+│   ├── routes/           # Express router endpoints (music, auth)
+│   └── app.js            # Express application middleware configuration
+├── server.js             # Entry server file running the app on a dynamic port
+└── package.json          # Root-level build scripts and server orchestrator
+```
 
-### 1. Clone the Repository
+---
+
+## 💻 Local Setup
+
+Run the application locally on your machine:
+
+### 1. Prerequisites
+* Node.js installed (v18 or higher recommended).
+* MongoDB database (Atlas or local instance).
+* Git installed.
+
+### 2. Clone the Repository
 ```bash
 git clone https://github.com/Faizan-Fr-Dev/Soundly-.git
 cd Soundly-
 ```
 
-### 2. Set Up Environment Variables
-Create a `.env` file in the root directory and add the following keys:
+### 3. Set Up Environment Variables
+Create a `.env` file in the root directory:
 ```env
 PORT = 3000
 MONGO_URI = your_mongodb_connection_string
@@ -115,8 +106,8 @@ IMAGE_KIT_URL_ENDPOINT = https://ik.imagekit.io/xlkeq9uf7
 YOUTUBE_API_KEY = your_youtube_data_api_v3_key
 ```
 
-### 3. Install Dependencies
-Install server-side dependencies in the root, and client-side dependencies in the `client/` folder:
+### 4. Install Dependencies
+Install server-side dependencies and client-side dependencies:
 ```bash
 # Install Server Dependencies
 npm install
@@ -127,27 +118,27 @@ npm install
 cd ..
 ```
 
-### 4. Run the Development Servers
-Start both servers concurrently:
+### 5. Run Both Servers Concurrently
+Start the Node server (port 3000) and the Vite development server (port 5173):
 ```bash
-# In the root folder:
-# Start Backend Server (runs on Port 3000)
+# Run backend server:
 npm run dev
 
-# Start Frontend Client (runs on Port 5173)
+# Run frontend client (in a separate terminal or concurrent launcher):
 npm run client
 ```
-
-### 5. Build for Production
-```bash
-# Compiles React code into optimized build assets under client/dist
-npm run build
-```
+Open [http://localhost:5173](http://localhost:5173) in your browser to view the application.
 
 ---
 
-## 📈 Deployment (Railway)
-This project is configured for deployment on platforms like Railway or Heroku:
-1. Dynamic port assignment: `const PORT = process.env.PORT || 3000;`.
-2. Global Node `crypto` polyfill injection inside `server.js` to ensure compatibility with Node v18+ environments.
-3. Automatically triggers client-side compiling via a root build command: `"build": "npm run client:build"`.
+## ☁️ Deployment
+
+### Backend & Frontend (Railway)
+1. Link your GitHub repository to Railway.
+2. Configure your environment variables in the Railway dashboard (`MONGO_URI`, `JWT_SECRET`, `YOUTUBE_API_KEY`, etc.).
+3. Railway reads the root `package.json`, automatically runs `"build": "npm run client:build"` to compile frontend assets, and starts the server utilizing `npm start`.
+
+---
+
+## 👤 Author
+Designed and engineered with 💻 by Faizan-Fr-Dev
