@@ -1052,6 +1052,10 @@ audio { width: min(800px, 70vw); accent-color: var(--accent); }
 /* ─── Responsive ────────────────────────────────────────────────────── */
 @media (max-width: 1040px) {
   .app-shell { grid-template-columns: 1fr; }
+  .sidebar, .main, .player, .auth-modal, .track-detail, .notice {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
   .sidebar { position: static; height: auto; min-height: 0; width: 100% !important; padding: 16px !important; flex-direction: column; gap: 0; }
   .sidebar:hover { width: 100% !important; }
   .nav-label { max-width: 200px !important; opacity: 1 !important; }
