@@ -5,7 +5,7 @@ A modern, full-stack web application for a music streaming platform and creator 
 ---
 
 ## 🚀 Live Demo & Deployments
-* **Web App (Frontend & Backend)**: Deployed on Railway at **[Soundly Web App](https://soundly-production-7322.up.railway.app/)**    >  > **Note:** The live demo was previously deployed on Railway. It is currently unavailable due to hosting/usage limitations. The project source code remains available in this repository.
+* **Web App (Frontend & Backend)**: Deployed on Railway at **[Soundly Web App](https://soundly-production-7322.up.railway.app/)**      > **Note:** The live demo was previously deployed on Railway. It is currently unavailable due to hosting/usage limitations. The project source code remains available in this repository.
 
 
 ---
